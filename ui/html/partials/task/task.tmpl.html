@@ -1,0 +1,15 @@
+{{define "task"}}
+<tr>
+  <td colspan="2">{{.Content}}</td>
+  <td>{{humanDate .CreatedAt}}</td>
+  <td>
+    <button
+      hx-delete="/task/delete/{{.BoardId}}/{{.GroupId}}/{{.ID}}"
+      hx-target="closest tr"
+      hx-swap="outerHTML"
+    >
+      Delete
+    </button>
+  </td>
+</tr>
+{{end}}

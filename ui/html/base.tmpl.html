@@ -1,0 +1,24 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>{{template "title" .}} - todo</title>
+    <link rel="stylesheet" href="/static/css/test.css" />
+    <script type="module" src="/static/js/auth.js"></script>
+    <script
+      src="https://unpkg.com/htmx.org@1.9.10"
+      integrity="sha384-D1Kt99CQMDuVetoL1lrYwg5t+9QdHe7NLX/SoJYkXDFfX37iInKRy5xLSi8nO7UC"
+      crossorigin="anonymous"
+    ></script>
+  </head>
+  <body>
+    <header>
+      <h1><a href="/">todo</a></h1>
+    </header>
+    {{template "nav" .}}
+    <main>{{template "main" .}}</main>
+    <footer>Powered by Zaid Alghurabi using Go</footer>
+  </body>
+</html>
+{{end}}

@@ -1,0 +1,13 @@
+{{define "nav"}}
+<nav>
+  <ul>
+    <li><a href="/">Home</a></li>
+    {{if .IsAuthenticated}}
+    <li><a href="/user/logout" hx-post="/user/logout">Logout</a></li>
+    {{else}}
+    <li><a href="/user/signup">Sign Up</a></li>
+    <li><a href="/user/login">Login</a></li>
+    {{end}}
+  </ul>
+</nav>
+{{end}}

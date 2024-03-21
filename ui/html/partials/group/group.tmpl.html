@@ -1,0 +1,20 @@
+{{define "group"}}
+<tbody>
+  <tr>
+    <td><h2>{{.Name}}</h2></td>
+  </tr>
+  {{range .Tasks}} {{template "task" .}} {{end}}
+  <tr>
+    <td colspan="2">
+      <input
+        type="text"
+        name="task"
+        placeholder="New Task"
+        hx-post="/task/create/{{.BoardId}}/{{.ID}}"
+        hx-target="previous tr"
+        hx-swap="afterend"
+      />
+    </td>
+  </tr>
+</tbody>
+{{end}}

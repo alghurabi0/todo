@@ -1,0 +1,22 @@
+{{define "title"}}View Board{{end}} {{define "main"}}
+<h2>{{.Board.Title}}</h2>
+<p>{{.Board.Description}}</p>
+<table>
+  <thead>
+    <tr>
+      <th>Task</th>
+      <th>Created</th>
+      <th>Delete</th>
+    </tr>
+  </thead>
+  {{range .Board.Groups}} {{template "group" .}} {{end}}
+</table>
+<form
+  hx-post="/group/create/{{.Board.ID}}"
+  hx-target="previous table"
+  hx-swap="beforeend"
+>
+  <input type="text" name="name" placeholder="New Group" required />
+  <button type="submit">create group</button>
+</form>
+{{end}} ```

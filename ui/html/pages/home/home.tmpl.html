@@ -1,0 +1,11 @@
+{{define "title"}}Home{{end}} {{define "main"}}
+<h1>Welcome to homepage</h1>
+{{if .IsAuthenticated}}
+<div id="board_list">{{range .Boards}} {{template "boardCard" .}} {{end}}</div>
+<form hx-post="/board/create" hx-target="#board_list" hx-swap="beforeend">
+  <input type="text" name="title" placeholder="title" required />
+  <button type="submit">create board</button>
+</form>
+{{else}}
+<p>please login to view boards</p>
+{{end}} {{end}} ```
