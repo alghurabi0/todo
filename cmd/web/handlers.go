@@ -142,6 +142,30 @@ func (app *application) groupCreate(w http.ResponseWriter, r *http.Request) {
 	group.BoardId = boardId
 	app.renderPart(w, http.StatusOK, "couple", "group", group)
 }
+func (app *application) columnCreate(w http.ResponseWriter, r *http.Request) {
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	boardId := r.PathValue("boardId")
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	name := r.PostFormValue("name")
+	colType := r.PostFormValue("type")
+	columnId, err := app.columns.Insert(userId, boardId, name, colType)
+	if err != nil || columnId == "" {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	// send the columnId as json as a response
+	json.NewEncoder(w).Encode(map[string]string{"columnId": columnId})
+}
 
 // DELETE handlers
 func (app *application) taskDelete(w http.ResponseWriter, r *http.Request) {

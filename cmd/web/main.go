@@ -25,6 +25,7 @@ type application struct {
 	groups        *models.GroupModel
 	boards        *models.BoardModel
 	users         *models.UserModel
+	columns       *models.ColumnModel
 	templateCache map[string]*template.Template
 }
 
@@ -57,6 +58,7 @@ func main() {
 		groups:        &models.GroupModel{DB: db},
 		boards:        &models.BoardModel{DB: db},
 		users:         &models.UserModel{DB: db, Auth: auth},
+		columns:       &models.ColumnModel{DB: db},
 		templateCache: templateCache,
 	}
 	tlsConfig := &tls.Config{

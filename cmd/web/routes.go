@@ -30,6 +30,8 @@ func (app *application) routes() http.Handler {
 	mux.Handle("DELETE /task/delete/{boardId}/{groupId}/{taskId}", protected.ThenFunc(app.taskDelete))
 	// -- group handlers
 	mux.Handle("POST /group/create/{boardId}", protected.ThenFunc(app.groupCreate))
+	// -- column handlers
+	mux.Handle("POST /column/create/{boardId}", protected.ThenFunc(app.columnCreate))
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders, app.requireAuth)
 
