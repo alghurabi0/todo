@@ -97,6 +97,7 @@ func (m *BoardModel) Get(userId string, boardId string) (*Board, error) {
 			task.ID = taskDoc.Ref.ID
 			task.BoardId = boardId
 			task.GroupId = groupDoc.Ref.ID
+			task.ColumnOrder = board.ColumnOrder
 			group.Tasks = append(group.Tasks, task)
 		}
 		group.BoardId = boardId

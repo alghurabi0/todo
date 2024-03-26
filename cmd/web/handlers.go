@@ -117,8 +117,14 @@ func (app *application) taskCreate(w http.ResponseWriter, r *http.Request) {
 		app.serverError(w, err)
 		return
 	}
+	columnOrder, err := app.columns.GetColumnOrder(userId, boardId)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
 	task.GroupId = groupId
 	task.BoardId = boardId
+	task.ColumnOrder = columnOrder
 	app.renderPart(w, http.StatusOK, "couple", "task", task)
 }
 func (app *application) groupCreate(w http.ResponseWriter, r *http.Request) {

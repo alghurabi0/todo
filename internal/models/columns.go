@@ -47,3 +47,15 @@ func (m *ColumnModel) Insert(userId, boardId, name, colType string) (string, err
 	}
 	return doc.ID, nil
 }
+func (m *ColumnModel) GetColumnOrder(userId, boardId string) ([]string, error) {
+	ctx := context.Background()
+	doc, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var board Board
+	if err := doc.DataTo(&board); err != nil {
+		return nil, err
+	}
+	return board.ColumnOrder, nil
+}

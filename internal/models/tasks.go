@@ -15,6 +15,7 @@ type Task struct {
 	Order        int                    `firestore:"order"`
 	CreatedAt    time.Time              `firestore:"created_at"`
 	ColumnValues map[string]interface{} `firestore:"column_values"`
+	ColumnOrder  []string               `firestore:"-"`
 }
 
 type TaskModel struct {

@@ -4,12 +4,14 @@
   <td>{{humanDate .CreatedAt}}</td>
   <!-- loop over columnIds, in each iteration render the column value or empty td -->
   <!-- for tasks with no ColumnValues, render len(.Board.Columns) empty tds -->
-  {{with .ColumnValues}} {{range $k, $v := .}}
-  <td>{{index $.ColumnValues $k}}</td>
-  {{end}} {{else}}
+  {{with .ColumnValues}} {{range $colId := $.ColumnOrder}} {{if index
+  $.ColumnValues $colId}}
+  <td id="{{$colId}}">{{index $.ColumnValues $colId}}</td>
+  {{else}}
   <td></td>
+  {{end}} {{end}} {{else}} {{range .ColumnOrder}}
   <td></td>
-  {{end}}
+  {{end}} {{end}}
   <td>
     <button
       hx-delete="/task/delete/{{.BoardId}}/{{.GroupId}}/{{.ID}}"
