@@ -8,12 +8,13 @@ import (
 )
 
 type Task struct {
-	ID        string    `firestore:"-"`
-	BoardId   string    `firestore:"-"`
-	GroupId   string    `firestore:"-"`
-	Content   string    `firestore:"content"`
-	Order     int       `firestore:"order"`
-	CreatedAt time.Time `firestore:"created_at"`
+	ID           string                 `firestore:"-"`
+	BoardId      string                 `firestore:"-"`
+	GroupId      string                 `firestore:"-"`
+	Content      string                 `firestore:"content"`
+	Order        int                    `firestore:"order"`
+	CreatedAt    time.Time              `firestore:"created_at"`
+	ColumnValues map[string]interface{} `firestore:"column_values"`
 }
 
 type TaskModel struct {

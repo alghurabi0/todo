@@ -4,9 +4,21 @@
 <table>
   <thead>
     <tr>
-      <th>Task</th>
+      <th colspan="2">Task</th>
       <th>Created</th>
+      {{range $colId := .Board.ColumnOrder}} {{with index $.Board.Columns
+      $colId}}
+      <th id="{{.ID}}">{{.Name}}</th>
+      {{else}}
+      <th></th>
+      {{end}} {{end}}
       <th>Delete</th>
+      <th
+        hx-post="/column/create/{{.Board.ID}}"
+        hx-vals='{"name": "hello", "type": "Text"}'
+      >
+        +
+      </th>
     </tr>
   </thead>
   {{range .Board.Groups}} {{template "group" .}} {{end}}

@@ -28,6 +28,22 @@ func (m *ColumnModel) Insert(userId, boardId, name, colType string) (string, err
 	if err != nil {
 		return "", err
 	}
-	col.ID = doc.ID
+
+	// update columnOrder array in the board document
+	boardDoc, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Get(ctx)
+	if err != nil {
+		return "", err
+	}
+	var board Board
+	if err := boardDoc.DataTo(&board); err != nil {
+		return "", err
+	}
+	board.ColumnOrder = append(board.ColumnOrder, doc.ID)
+	_, err = m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Update(ctx, []firestore.Update{
+		{Path: "column_order", Value: board.ColumnOrder},
+	})
+	if err != nil {
+		return "", err
+	}
 	return doc.ID, nil
 }

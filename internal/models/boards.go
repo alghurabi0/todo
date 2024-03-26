@@ -10,12 +10,14 @@ import (
 )
 
 type Board struct {
-	ID             string    `firestore:"-"`
-	Title          string    `firestore:"title"`
-	Description    string    `firestore:"description"`
-	CreatedAt      time.Time `firestore:"created_at"`
-	Groups         Groups    `firestore:"-"`
-	LastGroupOrder int       `firestore:"last_group_order"`
+	ID             string            `firestore:"-"`
+	Title          string            `firestore:"title"`
+	Description    string            `firestore:"description"`
+	CreatedAt      time.Time         `firestore:"created_at"`
+	Groups         Groups            `firestore:"-"`
+	LastGroupOrder int               `firestore:"last_group_order"`
+	Columns        map[string]Column `firestore:"-"`
+	ColumnOrder    []string          `firestore:"column_order"`
 }
 
 type BoardModel struct {
@@ -28,6 +30,7 @@ func (m *BoardModel) Insert(title string, description string, userId string) (st
 		Title:          title,
 		Description:    description,
 		LastGroupOrder: 0,
+		ColumnOrder:    []string{},
 		CreatedAt:      time.Now(),
 	})
 	if err != nil {
@@ -45,6 +48,21 @@ func (m *BoardModel) Get(userId string, boardId string) (*Board, error) {
 	var board Board
 	if err := doc.DataTo(&board); err != nil {
 		return nil, err
+	}
+	board.Columns = make(map[string]Column)
+	// Get all columns for the board
+	for _, colId := range board.ColumnOrder {
+		colDoc, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("columns").Doc(colId).Get(ctx)
+		if err != nil {
+			return nil, err
+		}
+		var col Column
+		if err := colDoc.DataTo(&col); err != nil {
+			return nil, err
+		}
+		col.ID = colDoc.Ref.ID
+		col.BoardId = boardId
+		board.Columns[col.ID] = col
 	}
 	board.ID = doc.Ref.ID
 	// Get all groups for the board
