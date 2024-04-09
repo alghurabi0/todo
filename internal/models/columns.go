@@ -59,3 +59,13 @@ func (m *ColumnModel) GetColumnOrder(userId, boardId string) ([]string, error) {
 	}
 	return board.ColumnOrder, nil
 }
+func (m *ColumnModel) Reorder(userId string, boardId string, order []string) error {
+	ctx := context.Background()
+	_, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Update(ctx, []firestore.Update{
+		{Path: "column_order", Value: order},
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}

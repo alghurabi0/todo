@@ -16,6 +16,7 @@ const firebaseConfig = {
   measurementId: "G-9WLJRHQPP2",
 };
 const app = initializeApp(firebaseConfig);
+export { app };
 
 // Signup function
 function signup() {

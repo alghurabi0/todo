@@ -1,7 +1,7 @@
 {{define "group"}}
-<tbody>
+<tbody id="{{.ID}}" class="group">
   <tr>
-    <td><h2>{{.Name}}</h2></td>
+    <td><h2 class="group_name">{{.Name}}</h2></td>
   </tr>
   {{range .Tasks}} {{template "task" .}} {{end}}
   <tr>

@@ -4,7 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"net/url"
 	"time"
 
 	"todo.zaidalghurabi.net/internal/validator"
@@ -171,6 +173,95 @@ func (app *application) columnCreate(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	// send the columnId as json as a response
 	json.NewEncoder(w).Encode(map[string]string{"columnId": columnId})
+}
+
+// PUT handlers
+func (app *application) taskSwap(w http.ResponseWriter, r *http.Request) {
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	boardId := r.PathValue("boardId")
+	if boardId == "" {
+		app.notFound(w)
+		return
+	}
+	groupId := r.PathValue("groupId")
+	if groupId == "" {
+		app.notFound(w)
+		return
+	}
+	swappedId := r.PathValue("swappedId")
+	if swappedId == "" {
+		app.notFound(w)
+		return
+	}
+	swappedOrder := r.PathValue("swappedOrder")
+	if swappedOrder == "" {
+		app.notFound(w)
+		return
+	}
+	swappedOrderInt := app.toInt(swappedOrder)
+	if swappedOrderInt == 0 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	targetId := r.PathValue("targetId")
+	if targetId == "" {
+		app.notFound(w)
+		return
+	}
+	targetOrder := r.PathValue("targetOrder")
+	if targetOrder == "" {
+		app.notFound(w)
+		return
+	}
+	targetOrderInt := app.toInt(targetOrder)
+	if targetOrderInt == 0 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err := app.tasks.Swap(userId, boardId, groupId, swappedId, swappedOrderInt, targetId, targetOrderInt)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+func (app *application) reorderColumns(w http.ResponseWriter, r *http.Request) {
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	values, err := url.ParseQuery(string(body))
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	order := values["order"]
+	if len(order) == 0 {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	boardId := r.PathValue("boardId")
+	if boardId == "" {
+		app.notFound(w)
+		return
+	}
+	err = app.columns.Reorder(userId, boardId, order)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 // DELETE handlers

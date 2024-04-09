@@ -28,10 +28,12 @@ func (app *application) routes() http.Handler {
 	// -- task handlers
 	mux.Handle("POST /task/create/{boardId}/{groupId}", protected.ThenFunc(app.taskCreate))
 	mux.Handle("DELETE /task/delete/{boardId}/{groupId}/{taskId}", protected.ThenFunc(app.taskDelete))
+	mux.Handle("PUT /task/swap/{boardId}/{groupId}/{swappedId}/{swappedOrder}/{targetId}/{targetOrder}", protected.ThenFunc(app.taskSwap))
 	// -- group handlers
 	mux.Handle("POST /group/create/{boardId}", protected.ThenFunc(app.groupCreate))
 	// -- column handlers
 	mux.Handle("POST /column/create/{boardId}", protected.ThenFunc(app.columnCreate))
+	mux.Handle("PUT /column/drag/{boardId}", protected.ThenFunc(app.reorderColumns))
 
 	standard := alice.New(app.recoverPanic, app.logRequest, secureHeaders, app.requireAuth)
 

@@ -1,6 +1,6 @@
 {{define "task"}}
-<tr>
-  <td colspan="2">{{.Content}}</td>
+<tr id="{{.ID}}" data-order="{{.Order}}" class="task">
+  <td colspan="2" class="task_content">{{.Content}}</td>
   <td>{{humanDate .CreatedAt}}</td>
   <!-- loop over columnIds, in each iteration render the column value or empty td -->
   <!-- for tasks with no ColumnValues, render len(.Board.Columns) empty tds -->

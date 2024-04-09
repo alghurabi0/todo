@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"runtime/debug"
+	"strconv"
 	"time"
 )
 
@@ -78,4 +79,12 @@ func (app *application) GetUserId(r *http.Request) string {
 		return ""
 	}
 	return userId
+}
+
+func (app *application) toInt(s string) int {
+	i, err := strconv.Atoi(s)
+	if err != nil {
+		return 0
+	}
+	return i
 }

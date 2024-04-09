@@ -87,6 +87,31 @@ func (m *TaskModel) UpdateLastTaskOrder(userId string, boardId string, groupId s
 	}
 	return nil
 }
+func (m *TaskModel) Swap(userId string, boardId string, groupId string,
+	swappedId string, swappedOrder int, targetId string, targetOrder int) error {
+	ctx := context.Background()
+	err := m.DB.RunTransaction(ctx, func(ctx context.Context, tx *firestore.Transaction) error {
+		// update the swapped task without getting the document, since we already have the order
+		err := tx.Update(m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("groups").Doc(groupId).Collection("tasks").Doc(swappedId), []firestore.Update{
+			{Path: "order", Value: targetOrder},
+		})
+		if err != nil {
+			return err
+		}
+		// update the target task without getting the document, since we already have the order
+		err = tx.Update(m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("groups").Doc(groupId).Collection("tasks").Doc(targetId), []firestore.Update{
+			{Path: "order", Value: swappedOrder},
+		})
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 type Tasks []Task
 

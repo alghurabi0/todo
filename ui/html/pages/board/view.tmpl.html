@@ -1,24 +1,25 @@
 {{define "title"}}View Board{{end}} {{define "main"}}
-<h2>{{.Board.Title}}</h2>
-<p>{{.Board.Description}}</p>
-<table>
+<h2 class="board_title">{{.Board.Title}}</h2>
+<p class="board_description">{{.Board.Description}}</p>
+<table id="{{.Board.ID}}" class="board">
   <thead>
     <tr>
-      <th colspan="2">Task</th>
-      <th>Created</th>
+      <th colspan="2" class="no-sort">Task</th>
+      <th class="no-sort">Created</th>
       {{range $colId := .Board.ColumnOrder}} {{with index $.Board.Columns
       $colId}}
-      <th id="{{.ID}}">{{.Name}}</th>
+      <th id="{{.ID}}" class="column">{{.Name}}</th>
       {{else}}
       <th></th>
       {{end}} {{end}}
-      <th>Delete</th>
-      <th
+      <th class="no-sort">Delete</th>
+      <!-- <th
+        class="no-sort"
         hx-post="/column/create/{{.Board.ID}}"
         hx-vals='{"name": "hello", "type": "Text"}'
       >
         +
-      </th>
+      </th> -->
     </tr>
   </thead>
   {{range .Board.Groups}} {{template "group" .}} {{end}}
@@ -31,4 +32,68 @@
   <input type="text" name="name" placeholder="New Group" required />
   <button type="submit">create group</button>
 </form>
+<script>
+  // TODO - implement filters to exclude unswappable els.
+  const groups = document.querySelectorAll(".group");
+  if (groups.length > 0) {
+    console.log("got groups here");
+    for (let i = 0; i < groups.length; i++) {
+      const group = groups[i];
+      const sortable = new Sortable(group, {
+        swap: true,
+        swapClass: "highlight",
+        animation: 150,
+        onEnd(evt) {
+          const groupId = group.id;
+          const swappedId = evt.item.id;
+          const swappedOrder = evt.item.dataset.order;
+          const targetId = evt.to.children[evt.oldIndex].id;
+          const targetOrder = evt.to.children[evt.oldIndex].dataset.order;
+          console.log("item swapped", evt.item, swappedId, swappedOrder);
+          console.log(
+            "target el",
+            evt.to.children[evt.oldIndex],
+            targetId,
+            targetOrder
+          );
+          console.log("group id", groupId);
+
+          htmx.ajax(
+            "PUT",
+            `/task/swap/{{.Board.ID}}/${groupId}/${swappedId}/${swappedOrder}/${targetId}/${targetOrder}`,
+            { swap: "none" }
+          );
+        },
+      });
+    }
+  } else {
+    console.log("no groups here");
+  }
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const table = document.querySelector("table");
+    if (!table) {
+      console.log("no table found");
+      return;
+    }
+    console.log("got table here");
+    const thead = table.querySelector("thead");
+    const tr = thead.querySelector("tr");
+    const sortable = new Sortable(tr, {
+      dataIdAttr: "id",
+      ghostClass: "highlight",
+      filter: ".no-sort",
+      // implement data transfer to move columns
+      onEnd(evt) {
+        console.log("end", evt.item.id, evt);
+        const order = sortable.toArray().slice(2, -1);
+        htmx.ajax("PUT", "/column/drag/{{.Board.ID}}", {
+          swap: "none",
+          values: { order: order },
+        });
+      },
+    });
+  });
+</script>
 {{end}} ```
