@@ -66,6 +66,16 @@ func (m *GroupModel) UpdateLastGroupOrder(userId string, boardId string, order i
 	}
 	return nil
 }
+func (m *GroupModel) UpdateName(userId, boardId, groupId, groupName string) error {
+	ctx := context.Background()
+	_, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("groups").Doc(groupId).Update(ctx, []firestore.Update{
+		{Path: "name", Value: groupName},
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 type Groups []Group
 

@@ -26,6 +26,7 @@ type application struct {
 	boards        *models.BoardModel
 	users         *models.UserModel
 	columns       *models.ColumnModel
+	statuses      *models.StatusModel
 	templateCache map[string]*template.Template
 }
 
@@ -59,6 +60,7 @@ func main() {
 		boards:        &models.BoardModel{DB: db},
 		users:         &models.UserModel{DB: db, Auth: auth},
 		columns:       &models.ColumnModel{DB: db},
+		statuses:      &models.StatusModel{DB: db},
 		templateCache: templateCache,
 	}
 	tlsConfig := &tls.Config{

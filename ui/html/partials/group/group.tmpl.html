@@ -1,7 +1,9 @@
 {{define "group"}}
 <tbody id="{{.ID}}" class="group">
   <tr>
-    <td><h2 class="group_name">{{.Name}}</h2></td>
+    <td>
+      <input class="group_name" type="text" name="group_name" value="{{.Name}}" hx-put="/group/update/title/{{.BoardId}}/{{.ID}}"></input>
+    </td>
   </tr>
   {{range .Tasks}} {{template "task" .}} {{end}}
   <tr>

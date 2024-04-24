@@ -174,6 +174,48 @@ func (app *application) columnCreate(w http.ResponseWriter, r *http.Request) {
 	// send the columnId as json as a response
 	json.NewEncoder(w).Encode(map[string]string{"columnId": columnId})
 }
+func (app *application) statusCreate(w http.ResponseWriter, r *http.Request) {
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	boardId := r.PathValue("boardId")
+	if boardId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	groupId := r.PathValue("groupId")
+	if groupId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	taskId := r.PathValue("taskId")
+	if taskId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	status_name := r.PostFormValue("status_name")
+	if status_name == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	status_color := r.PostFormValue("status_color")
+	if status_color == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	err = app.statuses.Insert(userId, boardId, groupId, taskId, status_name, status_color)
+	if err != nil {
+		app.serverError(w, err)
+	}
+}
 
 // PUT handlers
 func (app *application) taskSwap(w http.ResponseWriter, r *http.Request) {
@@ -257,6 +299,144 @@ func (app *application) reorderColumns(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	err = app.columns.Reorder(userId, boardId, order)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+func (app *application) taskColValUpdate(w http.ResponseWriter, r *http.Request) {
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	boardId := r.PathValue("boardId")
+	if boardId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	groupId := r.PathValue("groupId")
+	if groupId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	taskId := r.PathValue("taskId")
+	if taskId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	columnId := r.PathValue("columnId")
+	if columnId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	value := r.PostFormValue("colVal")
+	err = app.tasks.UpdateColVal(userId, boardId, groupId, taskId, columnId, value)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+func (app *application) taskContentUpdate(w http.ResponseWriter, r *http.Request) {
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	taskContent := r.PostFormValue("task_content")
+	if taskContent == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	boardId := r.PathValue("boardId")
+	if boardId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	groupId := r.PathValue("groupId")
+	if groupId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	taskId := r.PathValue("taskId")
+	if taskId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.tasks.UpdateContent(userId, boardId, groupId, taskId, taskContent)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+func (app *application) groupNameUpdate(w http.ResponseWriter, r *http.Request) {
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	groupName := r.PostFormValue("group_name")
+	if groupName == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	boardId := r.PathValue("boardId")
+	if boardId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	groupId := r.PathValue("groupId")
+	if groupId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.groups.UpdateName(userId, boardId, groupId, groupName)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+func (app *application) boardTitleUpdate(w http.ResponseWriter, r *http.Request) {
+	userId := app.GetUserId(r)
+	if userId == "" {
+		app.clientError(w, http.StatusUnauthorized)
+		return
+	}
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	boardTitle := r.PostFormValue("board_title")
+	if boardTitle == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	boardId := r.PathValue("id")
+	if boardId == "" {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+	err = app.boards.UpdateTitle(userId, boardId, boardTitle)
 	if err != nil {
 		app.serverError(w, err)
 		return

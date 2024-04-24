@@ -1,6 +1,9 @@
 package validator
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
 type Validator struct {
 	Errors map[string]string
@@ -24,4 +27,19 @@ func (v *Validator) Check(ok bool, key, message string) {
 }
 func (v *Validator) NotBlank(value string) bool {
 	return strings.TrimSpace(value) != ""
+}
+func (v *Validator) VerifyColType(value interface{}, colType string) bool {
+	switch colType {
+	case "Text":
+		_, ok := value.(string)
+		return ok
+	case "Number":
+		_, err := strconv.Atoi(value.(string))
+		if err != nil {
+			return false
+		}
+		return true
+	default:
+		return false
+	}
 }

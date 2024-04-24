@@ -1,17 +1,69 @@
 {{define "task"}}
 <tr id="{{.ID}}" data-order="{{.Order}}" class="task">
-  <td colspan="2" class="task_content">{{.Content}}</td>
+  <td colspan="2">
+    <input class="task_content" value="{{.Content}}" type="text" name="task_content" hx-put="/task/update/title/{{.BoardId}}/{{$.GroupId}}/{{$.ID}}"></input>
+  </td>
+  <td class="msgs_field">
+    <sl-drawer label="Drawer" class="msgs_drawer">
+      <div class="messages" style="height: 150vh; border: dashed 2px var(--sl-color-neutral-200); padding: 0 1rem;">
+        <textarea class="new_msg" placeholder="New Message" name="new_msg" hx-post="/message"></textarea>
+      </div>
+      <sl-button slot="footer" variant="primary">Close</sl-button>
+    </sl-drawer>
+    <sl-button>U</sl-button>
+  </td>
   <td>{{humanDate .CreatedAt}}</td>
   <!-- loop over columnIds, in each iteration render the column value or empty td -->
   <!-- for tasks with no ColumnValues, render len(.Board.Columns) empty tds -->
-  {{with .ColumnValues}} {{range $colId := $.ColumnOrder}} {{if index
-  $.ColumnValues $colId}}
-  <td id="{{$colId}}">{{index $.ColumnValues $colId}}</td>
+  {{with .ColumnValues}}
+    {{range $col := $.ColumnOrder}}
+      {{$colId := index $col "id" }}
+      {{$colType := index $col "type" }}
+      {{if index $.ColumnValues $colId}}
+        <td id="{{$colId}}">
+          {{if eq (index $.ColumnValues $colId "type") "Text"}}
+          <input name="colVal" data-type='{{index $.ColumnValues $colId "type"}}' type="text"
+          value='{{index $.ColumnValues $colId "value"}}' hx-put="/task/update/colVal/{{$.BoardId}}/{{$.GroupId}}/{{$.ID}}/{{$colId}}"></td>
+          {{else if eq (index $.ColumnValues $colId "type") "Number"}}
+          <input name="colVal" data-type='{{index $.ColumnValues $colId "type"}}' type="number"
+          value='{{index $.ColumnValues $colId "value"}}' hx-put="/task/update/colVal/{{$.BoardId}}/{{$.GroupId}}/{{$.ID}}/{{$colId}}"></input>
+          {{else if eq (index $.ColumnValues $colId "type") "Status"}}
+          <sl-dropdown stay-open-on-select>
+            <sl-button slot="trigger" caret>Open</sl-button>
+            <sl-menu>
+              <sl-menu-item><form>
+                <input name="status_name"></input>
+                <sl-color-picker name="status_color" format="hex" no-format-toggle size="small" hoist></sl-color-picker>
+                <button hx-post="/status/create/{{$.BoardId}}/{{$.GroupId}}/{{$.ID}}" hx-include="[name='status_color']">Add</button>
+              </form></sl-menu-item>
+              <sl-divider></sl-divider>
+            </sl-menu>
+          </sl-dropdown>
+          {{end}}
+        </td>
+      {{else}}
+        <td id="{{$colId}}">
+          {{if eq $colType "Text"}}
+          <input name="colVal" data-type='{{$colType}}' type="text" hx-put="/task/update/colVal/{{$.BoardId}}/{{$.GroupId}}/{{$.ID}}/{{$colId}}"></input>
+          {{else if eq $colType "Number"}}
+          <input name="colVal" data-type='{{$colType}}' type="number" hx-put="/task/update/colVal/{{$.BoardId}}/{{$.GroupId}}/{{$.ID}}/{{$colId}}"></input>
+          {{end}}
+        </td>
+      {{end}}
+    {{end}}
   {{else}}
-  <td></td>
-  {{end}} {{end}} {{else}} {{range .ColumnOrder}}
-  <td></td>
-  {{end}} {{end}}
+    {{range $col := $.ColumnOrder}}
+      {{$colId := index $col "id" }}
+      {{$colType := index $col "type" }}
+      <td id="{{$colId}}">
+          {{if eq $colType "Text"}}
+          <input name="colVal" data-type='{{$colType}}' type="text" hx-put="/task/update/colVal/{{$.BoardId}}/{{$.GroupId}}/{{$.ID}}/{{$colId}}"></input>
+          {{else if eq $colType "Number"}}
+          <input name="colVal" data-type='{{$colType}}' type="number" hx-put="/task/update/colVal/{{$.BoardId}}/{{$.GroupId}}/{{$.ID}}/{{$colId}}"></input>
+          {{end}}
+      </td>
+    {{end}}
+  {{end}}
   <td>
     <button
       hx-delete="/task/delete/{{.BoardId}}/{{.GroupId}}/{{.ID}}"

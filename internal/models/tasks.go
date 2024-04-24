@@ -2,24 +2,30 @@ package models
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"cloud.google.com/go/firestore"
+	"todo.zaidalghurabi.net/internal/validator"
 )
 
 type Task struct {
-	ID           string                 `firestore:"-"`
-	BoardId      string                 `firestore:"-"`
-	GroupId      string                 `firestore:"-"`
-	Content      string                 `firestore:"content"`
-	Order        int                    `firestore:"order"`
-	CreatedAt    time.Time              `firestore:"created_at"`
-	ColumnValues map[string]interface{} `firestore:"column_values"`
-	ColumnOrder  []string               `firestore:"-"`
+	ID           string                       `firestore:"-"`
+	BoardId      string                       `firestore:"-"`
+	GroupId      string                       `firestore:"-"`
+	Content      string                       `firestore:"content"`
+	Order        int                          `firestore:"order"`
+	CreatedAt    time.Time                    `firestore:"created_at"`
+	ColumnValues map[string]map[string]string `firestore:"column_values"`
+	ColumnOrder  []map[string]string          `firestore:"-"`
+	Messages     []Message                    `firestore:"-"`
 }
 
 type TaskModel struct {
 	DB *firestore.Client
+}
+type Validator struct {
+	validator.Validator
 }
 
 func (m *TaskModel) Insert(userId string, boardId string, groupId string, content string) (*Task, error) {
@@ -106,6 +112,54 @@ func (m *TaskModel) Swap(userId string, boardId string, groupId string,
 			return err
 		}
 		return nil
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (m *TaskModel) UpdateColVal(userId string, boardId string, groupId string, taskId string, columnId string, value interface{}) error {
+	ctx := context.Background()
+	var column Column
+	doc, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("columns").Doc(columnId).Get(ctx)
+	if err != nil {
+		return err
+	}
+	if err := doc.DataTo(&column); err != nil {
+		return err
+	}
+	colType := column.Type
+	v := Validator{}
+	v.Check(v.VerifyColType(value, colType), "column_value", "invalid column value")
+	if !v.Valid() {
+		return errors.New("invalid column value")
+	}
+	var task Task
+	doc, err = m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("groups").Doc(groupId).Collection("tasks").Doc(taskId).Get(ctx)
+	if err != nil {
+		return err
+	}
+	if err := doc.DataTo(&task); err != nil {
+		return err
+	}
+	if task.ColumnValues == nil {
+		task.ColumnValues = make(map[string]map[string]string)
+	}
+	if task.ColumnValues[columnId] == nil {
+		task.ColumnValues[columnId] = make(map[string]string)
+		task.ColumnValues[columnId]["type"] = colType
+	}
+	task.ColumnValues[columnId]["value"] = value.(string)
+	_, err = m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("groups").Doc(groupId).Collection("tasks").Doc(taskId).Set(ctx, task)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (m *TaskModel) UpdateContent(userId, boardId, groupId, taskId, content string) error {
+	ctx := context.Background()
+	_, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("groups").Doc(groupId).Collection("tasks").Doc(taskId).Update(ctx, []firestore.Update{
+		{Path: "content", Value: content},
 	})
 	if err != nil {
 		return err

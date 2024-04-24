@@ -2,6 +2,7 @@ package models
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
@@ -10,14 +11,14 @@ import (
 )
 
 type Board struct {
-	ID             string            `firestore:"-"`
-	Title          string            `firestore:"title"`
-	Description    string            `firestore:"description"`
-	CreatedAt      time.Time         `firestore:"created_at"`
-	Groups         Groups            `firestore:"-"`
-	LastGroupOrder int               `firestore:"last_group_order"`
-	Columns        map[string]Column `firestore:"-"`
-	ColumnOrder    []string          `firestore:"column_order"`
+	ID             string              `firestore:"-"`
+	Title          string              `firestore:"title"`
+	Description    string              `firestore:"description"`
+	CreatedAt      time.Time           `firestore:"created_at"`
+	Groups         Groups              `firestore:"-"`
+	LastGroupOrder int                 `firestore:"last_group_order"`
+	Columns        map[string]Column   `firestore:"-"`
+	ColumnOrder    []map[string]string `firestore:"column_order"`
 }
 
 type BoardModel struct {
@@ -30,7 +31,7 @@ func (m *BoardModel) Insert(title string, description string, userId string) (st
 		Title:          title,
 		Description:    description,
 		LastGroupOrder: 0,
-		ColumnOrder:    []string{},
+		ColumnOrder:    []map[string]string{},
 		CreatedAt:      time.Now(),
 	})
 	if err != nil {
@@ -51,7 +52,8 @@ func (m *BoardModel) Get(userId string, boardId string) (*Board, error) {
 	}
 	board.Columns = make(map[string]Column)
 	// Get all columns for the board
-	for _, colId := range board.ColumnOrder {
+	for _, col := range board.ColumnOrder {
+		colId := col["id"]
 		colDoc, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("columns").Doc(colId).Get(ctx)
 		if err != nil {
 			return nil, err
@@ -98,6 +100,7 @@ func (m *BoardModel) Get(userId string, boardId string) (*Board, error) {
 			task.BoardId = boardId
 			task.GroupId = groupDoc.Ref.ID
 			task.ColumnOrder = board.ColumnOrder
+			fmt.Println(task.ColumnValues)
 			group.Tasks = append(group.Tasks, task)
 		}
 		group.BoardId = boardId
@@ -130,4 +133,14 @@ func (m *BoardModel) GetAll(userId string) (*[]Board, error) {
 		boards = append(boards, board)
 	}
 	return &boards, nil
+}
+func (m *BoardModel) UpdateTitle(userId, boardId, title string) error {
+	ctx := context.Background()
+	_, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Update(ctx, []firestore.Update{
+		{Path: "title", Value: title},
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }

@@ -2,6 +2,8 @@ package models
 
 import (
 	"context"
+	"errors"
+	"fmt"
 
 	"cloud.google.com/go/firestore"
 )
@@ -17,12 +19,20 @@ type ColumnModel struct {
 	DB *firestore.Client
 }
 
+var colTypes = map[string]bool{"Text": true, "Number": true, "Status": true}
+
 func (m *ColumnModel) Insert(userId, boardId, name, colType string) (string, error) {
+	ErrInvalidColType := errors.New("invalid column type")
 	ctx := context.Background()
 	col := Column{
 		Name:    name,
 		Type:    colType,
 		BoardId: boardId,
+	}
+	// validate column type
+	if _, ok := colTypes[colType]; !ok {
+		fmt.Println(colType)
+		return "", ErrInvalidColType
 	}
 	doc, _, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Collection("columns").Add(ctx, col)
 	if err != nil {
@@ -38,7 +48,8 @@ func (m *ColumnModel) Insert(userId, boardId, name, colType string) (string, err
 	if err := boardDoc.DataTo(&board); err != nil {
 		return "", err
 	}
-	board.ColumnOrder = append(board.ColumnOrder, doc.ID)
+	colOrder := map[string]string{"id": doc.ID, "type": colType}
+	board.ColumnOrder = append(board.ColumnOrder, colOrder)
 	_, err = m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Update(ctx, []firestore.Update{
 		{Path: "column_order", Value: board.ColumnOrder},
 	})
@@ -47,7 +58,7 @@ func (m *ColumnModel) Insert(userId, boardId, name, colType string) (string, err
 	}
 	return doc.ID, nil
 }
-func (m *ColumnModel) GetColumnOrder(userId, boardId string) ([]string, error) {
+func (m *ColumnModel) GetColumnOrder(userId, boardId string) ([]map[string]string, error) {
 	ctx := context.Background()
 	doc, err := m.DB.Collection("users").Doc(userId).Collection("boards").Doc(boardId).Get(ctx)
 	if err != nil {

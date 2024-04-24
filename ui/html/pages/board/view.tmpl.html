@@ -1,30 +1,70 @@
 {{define "title"}}View Board{{end}} {{define "main"}}
-<h2 class="board_title">{{.Board.Title}}</h2>
-<p class="board_description">{{.Board.Description}}</p>
+<input class="board_title" type="text" name="board_title" value="{{.Board.Title}}" hx-put="/board/update/title/{{.Board.ID}}"></input>
+<textarea class="board_description" name="board_description">{{.Board.Description}}</textarea>
 <table id="{{.Board.ID}}" class="board">
   <thead>
-    <tr>
+    <tr class="columns">
       <th colspan="2" class="no-sort">Task</th>
+      <th class="no-sort msgs_col"></th>
       <th class="no-sort">Created</th>
-      {{range $colId := .Board.ColumnOrder}} {{with index $.Board.Columns
-      $colId}}
-      <th id="{{.ID}}" class="column">{{.Name}}</th>
-      {{else}}
-      <th></th>
-      {{end}} {{end}}
+      {{range $col := .Board.ColumnOrder}}
+        {{$colId := index $col "id" }}
+        {{with index $.Board.Columns $colId}}
+          {{if eq .Type "Text"}}
+            <th id="{{.ID}}" class="column">
+              <input data-type="{{.Type}}" type="text" value="{{.Name}}"
+              hx-put="/column/update/{{.ID}}"
+              hx-swap="none"
+              ></input>
+            </th>
+          {{else if eq .Type "Number"}}
+            <th id="{{.ID}}" class="column">
+              <input data-type="{{.Type}}" type="text" value="{{.Name}}"
+              hx-put="/column/update/{{.ID}}"
+              hx-swap="none"
+              ></input>
+            </th>
+          {{else if eq .Type "Status"}}
+            <th id="{{.ID}}" class="column status_column">
+              <input data-type="{{.Type}}" type="text" value="{{.Name}}"
+              hx-put="/column/update/{{.ID}}"
+              hx-swap="none"
+              ></input>
+            </th>
+          {{else}}
+            <th>Unadded type</th>
+          {{end}}
+        {{else}}
+          <th>Col doesn't exist</th>
+        {{end}}
+      {{end}}
       <th class="no-sort">Delete</th>
-      <!-- <th
-        class="no-sort"
-        hx-post="/column/create/{{.Board.ID}}"
-        hx-vals='{"name": "hello", "type": "Text"}'
-      >
-        +
-      </th> -->
+      <th class="new_column_selection no-sort">
+        <sl-dropdown>
+          <sl-button slot="trigger" caret>+</sl-button>
+          <sl-menu>
+            <sl-menu-item
+              hx-post="/column/create/{{.Board.ID}}"
+              hx-vals='{"name": "Text", "type": "Text"}'
+              >Text</sl-menu-item
+            >
+            <sl-menu-item
+              hx-post="/column/create/{{.Board.ID}}"
+              hx-vals='{"name": "Number", "type": "Number"}'
+              >Number</sl-menu-item
+            >
+            <sl-menu-item
+              hx-post="/column/create/{{.Board.ID}}"
+              hx-vals='{"name": "Status", "type": "Status"}'
+              >Status</sl-menu-item>
+          </sl-menu>
+        </sl-dropdown>
+      </th>
     </tr>
   </thead>
   {{range .Board.Groups}} {{template "group" .}} {{end}}
 </table>
-<form
+<form class="insert_after"
   hx-post="/group/create/{{.Board.ID}}"
   hx-target="previous table"
   hx-swap="beforeend"
@@ -85,9 +125,10 @@
       ghostClass: "highlight",
       filter: ".no-sort",
       // implement data transfer to move columns
+      // warning: affects column order
       onEnd(evt) {
         console.log("end", evt.item.id, evt);
-        const order = sortable.toArray().slice(2, -1);
+        const order = sortable.toArray().slice(3, -2);
         htmx.ajax("PUT", "/column/drag/{{.Board.ID}}", {
           swap: "none",
           values: { order: order },
@@ -95,5 +136,19 @@
       },
     });
   });
+</script>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const drawers = document.querySelectorAll(".msgs_drawer");
+    if (drawers) {
+      drawers.forEach((drawer) => {
+        const openButton = drawer.nextElementSibling;
+        const closeButton = drawer.querySelector('sl-button[variant="primary"]');
+
+        openButton.addEventListener('click', () => drawer.show());
+        closeButton.addEventListener('click', () => drawer.hide());
+      })
+    }
+  })
 </script>
 {{end}} ```
